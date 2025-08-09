@@ -1,0 +1,10 @@
+[project]
+name = "convertmd"
+version = "0.1.0"
+description = "A web application for converting documents to Markdown format. Convert PDF, Word, PowerPoint, and Excel files to clean Markdown with ease."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "markitdown[all]>=0.1.2",
+    "streamlit>=1.48.0",
+]
