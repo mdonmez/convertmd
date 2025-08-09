@@ -2,6 +2,8 @@
 
 A web application for converting documents to Markdown format. Convert PDF, Word, PowerPoint, and Excel files to clean Markdown with ease.
 
+[Try it now](https://dub.sh/convertmd)
+
 ## Features
 
 - **Multiple Format Support**: Convert PDF, DOCX, DOC, PPTX, PPT, XLSX, and XLS files
