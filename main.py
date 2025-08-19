@@ -49,28 +49,28 @@ def convert_batch(uploaded_files):
     """Convert multiple files in parallel and return as zip"""
     converted_files = []
     errors = []
-    
+
     progress_bar = st.progress(0)
     status_text = st.empty()
     completed_count = 0
     total_files = len(uploaded_files)
-    
+
     # Thread-safe counter for progress updates
     progress_lock = threading.Lock()
-    
+
     def update_progress(filename):
         nonlocal completed_count
         with progress_lock:
             completed_count += 1
             status_text.text(f"Completed {completed_count}/{total_files} files...")
             progress_bar.progress(completed_count / total_files)
-    
+
     def convert_single_file(file):
         """Convert a single file and return result"""
         try:
             content, error = convert_document(file)
             update_progress(file.name)
-            
+
             if content:
                 filename = f"{Path(file.name).stem}.md"
                 return (filename, content, None)
@@ -79,12 +79,14 @@ def convert_batch(uploaded_files):
         except Exception as e:
             update_progress(file.name)
             return (None, None, f"{file.name}: {str(e)}")
-    
+
     # Use ThreadPoolExecutor with max 5 workers
     with ThreadPoolExecutor(max_workers=min(5, total_files)) as executor:
         # Submit all conversion tasks
-        future_to_file = {executor.submit(convert_single_file, file): file for file in uploaded_files}
-        
+        future_to_file = {
+            executor.submit(convert_single_file, file): file for file in uploaded_files
+        }
+
         # Process completed futures
         for future in as_completed(future_to_file):
             filename, content, error = future.result()
@@ -92,17 +94,17 @@ def convert_batch(uploaded_files):
                 converted_files.append((filename, content))
             else:
                 errors.append(error)
-    
+
     progress_bar.empty()
     status_text.empty()
-    
+
     if converted_files:
         # Create zip file in memory
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             for filename, content in converted_files:
                 zip_file.writestr(filename, content)
-        
+
         zip_buffer.seek(0)
         return zip_buffer.getvalue(), errors
     else:
@@ -111,27 +113,29 @@ def convert_batch(uploaded_files):
 
 def main():
     # Initialize session state
-    if 'converted_files_data' not in st.session_state:
+    if "converted_files_data" not in st.session_state:
         st.session_state.converted_files_data = {}  # Dict: filename -> content
-    if 'conversion_errors' not in st.session_state:
+    if "conversion_errors" not in st.session_state:
         st.session_state.conversion_errors = {}  # Dict: filename -> error
-    if 'last_files' not in st.session_state:
+    if "last_files" not in st.session_state:
         st.session_state.last_files = []
-    if 'clear_files' not in st.session_state:
+    if "clear_files" not in st.session_state:
         st.session_state.clear_files = False
-    
+
     # Header
     st.markdown("# convertmd")
     st.markdown("*Easily convert any document to Markdown*")
 
     # Single file uploader that accepts multiple files
     uploaded_files = st.file_uploader(
-    "Upload Document(s)",
-    type=["pdf", "docx", "doc", "pptx", "ppt", "xlsx", "xls"],
-    accept_multiple_files=True,
-    label_visibility="collapsed",
-    help="Drag and drop file(s) here, or click to browse",
-    key="file_uploader" if not st.session_state.clear_files else "file_uploader_cleared",
+        "Upload Document(s)",
+        type=["pdf", "docx", "doc", "pptx", "ppt", "xlsx", "xls", "epub"],
+        accept_multiple_files=True,
+        label_visibility="collapsed",
+        help="Drag and drop file(s) here, or click to browse",
+        key="file_uploader"
+        if not st.session_state.clear_files
+        else "file_uploader_cleared",
     )
 
     # Clear all button (only show when files are uploaded)
@@ -149,16 +153,20 @@ def main():
         current_file_names = [f.name for f in uploaded_files]
         previous_file_names = set(st.session_state.last_files)
         current_file_names_set = set(current_file_names)
-        
+
         # Remove data for files that are no longer uploaded
         removed_files = previous_file_names - current_file_names_set
         for removed_file in removed_files:
             st.session_state.converted_files_data.pop(removed_file, None)
             st.session_state.conversion_errors.pop(removed_file, None)
-        
+
         # Find new files that need conversion
-        new_files = [f for f in uploaded_files if f.name not in st.session_state.converted_files_data]
-        
+        new_files = [
+            f
+            for f in uploaded_files
+            if f.name not in st.session_state.converted_files_data
+        ]
+
         # Convert new files
         if new_files:
             if len(new_files) == 1:
@@ -168,35 +176,51 @@ def main():
                     content, error = convert_document(file)
                 if content:
                     st.session_state.converted_files_data[file.name] = content
-                    st.session_state.conversion_errors.pop(file.name, None)  # Remove any previous error
+                    st.session_state.conversion_errors.pop(
+                        file.name, None
+                    )  # Remove any previous error
                 else:
                     st.session_state.conversion_errors[file.name] = error
-                    st.session_state.converted_files_data.pop(file.name, None)  # Remove any previous content
+                    st.session_state.converted_files_data.pop(
+                        file.name, None
+                    )  # Remove any previous content
             else:
                 # Multiple files - use parallel processing
                 with st.spinner(f"Converting {len(new_files)} files..."):
+
                     def convert_and_store(file):
                         content, error = convert_document(file)
                         return file.name, content, error
-                    
+
                     # Use ThreadPoolExecutor for parallel conversion
-                    with ThreadPoolExecutor(max_workers=min(5, len(new_files))) as executor:
+                    with ThreadPoolExecutor(
+                        max_workers=min(5, len(new_files))
+                    ) as executor:
                         # Submit all conversion tasks
-                        future_to_filename = {executor.submit(convert_and_store, file): file.name for file in new_files}
-                        
+                        future_to_filename = {
+                            executor.submit(convert_and_store, file): file.name
+                            for file in new_files
+                        }
+
                         # Process completed futures
                         for future in as_completed(future_to_filename):
                             filename, content, error = future.result()
                             if content:
-                                st.session_state.converted_files_data[filename] = content
-                                st.session_state.conversion_errors.pop(filename, None)  # Remove any previous error
+                                st.session_state.converted_files_data[filename] = (
+                                    content
+                                )
+                                st.session_state.conversion_errors.pop(
+                                    filename, None
+                                )  # Remove any previous error
                             else:
                                 st.session_state.conversion_errors[filename] = error
-                                st.session_state.converted_files_data.pop(filename, None)  # Remove any previous content
-        
+                                st.session_state.converted_files_data.pop(
+                                    filename, None
+                                )  # Remove any previous content
+
         # Update last files list
         st.session_state.last_files = current_file_names
-        
+
         # Handle single file
         if len(uploaded_files) == 1:
             uploaded_file = uploaded_files[0]
@@ -231,15 +255,17 @@ def main():
             # Get converted files and errors for current uploads
             converted_files = []
             errors = []
-            
+
             for file in uploaded_files:
                 if file.name in st.session_state.converted_files_data:
                     filename = f"{Path(file.name).stem}.md"
                     content = st.session_state.converted_files_data[file.name]
                     converted_files.append((filename, content))
                 elif file.name in st.session_state.conversion_errors:
-                    errors.append(f"{file.name}: {st.session_state.conversion_errors[file.name]}")
-            
+                    errors.append(
+                        f"{file.name}: {st.session_state.conversion_errors[file.name]}"
+                    )
+
             # Create zip if we have converted files
             zip_data = None
             if converted_files:
@@ -269,9 +295,7 @@ def main():
                     use_container_width=True,
                 )
             else:
-                st.error(
-                    "No files could be converted. Check the error details above."
-                )
+                st.error("No files could be converted. Check the error details above.")
 
     else:
         # Clear session state when no files are uploaded
