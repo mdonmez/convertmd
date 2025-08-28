@@ -1,12 +1,12 @@
 # convertmd
 
-A web application for converting documents to Markdown format. Convert PDF, Word, PowerPoint, and Excel files to clean Markdown with ease.
+A web application for converting documents to Markdown format. Convert various document types to clean Markdown with ease.
 
 [Try it now](https://dub.sh/convertmd)
 
 ## Features
 
-- **Multiple Format Support**: Convert PDF, DOCX, DOC, PPTX, PPT, XLSX, and XLS files
+- **Multiple Format Support**: Convert PDF, DOCX, DOC, PPTX, PPT, XLSX, XLS, EPUB files
 - **Single & Batch Processing**: Convert individual files or multiple files at once with multithreading
 - **Real-time Preview**: View converted Markdown before downloading
 - **ZIP Archive Export**: Batch conversions are packaged as ZIP files
@@ -21,17 +21,20 @@ A web application for converting documents to Markdown format. Convert PDF, Word
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/mdonmez/convertmd
    cd convertmd
    ```
 
 2. **Install dependencies using uv**
+
    ```bash
    uv sync
    ```
 
 3. **Run the application**
+
    ```bash
    uv run streamlit run main.py
    ```
@@ -57,7 +60,7 @@ A web application for converting documents to Markdown format. Convert PDF, Word
 
 ### Supported File Types
 
-`.pdf`, `.docx`, `.doc`, `.pptx`, `.ppt`, `.xlsx`, `.xls`
+`.pdf`, `.docx`, `.doc`, `.pptx`, `.ppt`, `.xlsx`, `.xls`, `.epub`
 
 ## Architecture
 
