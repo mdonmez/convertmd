@@ -303,7 +303,7 @@ def main():
         st.session_state.conversion_errors = {}
         st.session_state.last_files = []
         # Show supported formats info only if no file is uploaded
-        st.info("**Supported formats:** PDF, Word, PowerPoint, Excel")
+        st.info("**Supported formats:** PDF, Word, PowerPoint, Excel, E-Book")
         st.caption("Single file -> Direct download | Multiple files -> ZIP archive")
 
 

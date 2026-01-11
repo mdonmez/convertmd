@@ -5,6 +5,6 @@ description = "A web application for converting documents to Markdown format. Co
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "markitdown[all]>=0.1.2",
+    "markitdown[pdf,docx,pptx,xlsx]>=0.1.2",
     "streamlit>=1.48.0",
 ]
